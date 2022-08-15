@@ -1,0 +1,120 @@
+﻿<!DOCTYPE html>
+<html lang="en" >
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title></title>
+
+<!--图标库 可无视-->
+<link rel='stylesheet' href='../css/font-awesome.min.css'>
+
+<!--核心样式-->
+<link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+  <!-- 引入样式 -->
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+  <!-- 引入组件库 -->
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+
+
+</head>
+<body >
+
+<div id="loginTable" class="container">
+  <div class="card"></div>
+  <div class="card">
+    <h1 class="title">用户登录</h1>
+    <form id="loginForm" method="post">
+      <div class="input-container">
+        <input type="text" id="loginUname" required="required" />
+        <label for="#{label}">用户名</label>
+        <div class="bar"></div>
+      </div>
+      <div class="input-container">
+        <input type="password" id="loginPsw" required="required" />
+        <label for="#{label}">密码</label>
+        <div class="bar"></div>
+      </div>
+      <div class="button-container">
+        <button type="button" id="loginBtn"><span>登录</span></button>
+      </div>
+      <div><p style="color: red;text-align: center" id="err_msg"></p></div>
+    </form>
+  </div>
+
+  <div class="card alt">
+    <div class="toggle"></div>
+    <h1 class="title">会员注册
+      <div class="close"></div>
+    </h1>
+    <form>
+      <div class="input-container">
+        <input type="#{type}" id="registerUname" required="required" />
+        <label for="registerUname">用户名</label>
+        <div class="bar"></div>
+      </div>
+      <div class="input-container">
+        <input type="password" id="registerPsw" required="required" />
+        <label for="registerPsw">密码</label>
+        <div class="bar"></div>
+      </div>
+      <div class="input-container">
+        <input type=password id="registerPsw2" required="required" />
+        <label for="registerPsw2">确认密码</label>
+        <div class="bar"></div>
+      </div>
+      <div class="button-container">
+        <button type="button" id="registerBtn"><span>提交注册</span></button>
+<!--        添加type=button，可以避免juery的点击按钮自动提交表单行为-->
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src='/js/jquery.min.js'></script>
+<script src="/js/script.js"></script>
+
+<script>
+
+  //todo 添加前台输入规则校验，正则
+
+  $("#loginBtn").click(function () {
+    let uname = $('#loginUname').val()
+    let psw = $('#loginPsw').val()
+    let url = "/user/" + uname +"/"+psw
+    axios.get(url).then(res =>{
+      if(true == res.data){
+        location.href = "main";
+      }else{
+        alert("用户名密码错误，请重新输入")
+      }
+    })
+  });
+
+
+  $("#registerBtn").click(function () {
+
+
+    let uname = $('#registerUname').val()
+    let psw1 = $('#registerPsw').val()
+    let psw2 = $('#registerPsw2').val()
+    if(psw1 != psw2 ){
+      alert("请输入相同密码")
+    }else{
+      console.log("sssss")
+      let newUser = new URLSearchParams();
+      newUser.append("uname", uname);
+      newUser.append("psw", psw1);
+      axios.post("/user",newUser).then(res =>{
+        alert(res.data)
+      })
+
+    }
+  });
+
+
+</script>
+</body>
+</html>
+

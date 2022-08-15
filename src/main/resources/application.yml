@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/chat?serverTimezone=UTC
+    username: root
+    password: 1234
+    type: com.alibaba.druid.pool.DruidDataSource
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+
+#todo 增加前台页面校验，增删好友后台结构，controller返回结果封装为resultMessage，启用loginerror页面
