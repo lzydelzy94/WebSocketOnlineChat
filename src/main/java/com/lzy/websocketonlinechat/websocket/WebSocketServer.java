@@ -15,6 +15,7 @@ import javax.servlet.http.HttpSession;
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -67,6 +68,9 @@ public class WebSocketServer {
             //将当前对象存储到集合中,key为httpsessino中当前用户的uname，value为当前对象
             User user = (User)httpSession.getAttribute("user");
             onlineUsers.put(user.getUname(), this);
+            //获取留给当前用户的留言
+            List<ChatMessage> leavingMsgs = IMessageService
+                    .getLeavingMsgs(user.getUid(), ChatMsgType.LEAVE_MSG);
 
             //将当前在线的所有用户的用户名推送给所有客户端
             //1.获取当前所有在线的用户名
@@ -76,7 +80,6 @@ public class WebSocketServer {
                     .msgType(ChatMsgType.SERVER_MSG).content(onlineUserNames).build();
             ObjectMapper objectMapper = new ObjectMapper();
             broadCastMessage(objectMapper.writeValueAsString(onlineUserMsg));
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -92,13 +95,19 @@ public class WebSocketServer {
             ObjectMapper objectMapper = new ObjectMapper();
             ChatMessage chatMessage = objectMapper.readValue(message, ChatMessage.class);
 
-            if(ChatMsgType.USER_TO_USER_MSG == chatMessage.getMsgType()){ //当为用户间私聊消息时
+            if(ChatMsgType.USER_TO_USER_MSG == chatMessage.getMsgType()){ //为在线用户间私聊消息时
                 //todo 由于前端技术所限，这里需要再通过接收人name查出接收人id放入message中
                 chatMessage.setToId(IUserService.getUserByName(chatMessage.getToName()).getUid());
                 //推送给指定用户
                 sendMessage(objectMapper.writeValueAsString(chatMessage), chatMessage.getToName());
-            }else if(ChatMsgType.USER_TO_ALL_MSG == chatMessage.getMsgType()){
-                //todo 为用户群发消息时
+                chatMessage.setMsgType(ChatMsgType.READED_MSG);
+            } else if (ChatMsgType.LEAVE_MSG == chatMessage.getMsgType()) {
+                //todo 由于前端技术所限，这里需要再通过接收人name查出接收人id放入message中
+                chatMessage.setToId(IUserService.getUserByName(chatMessage.getToName()).getUid());
+                //为留言消息时，直接存入数据库
+                System.out.println(chatMessage);
+            } else if (ChatMsgType.USER_TO_ALL_MSG == chatMessage.getMsgType()) {       //为用户群发消息时
+                broadCastMessage(objectMapper.writeValueAsString(chatMessage));
             }
             //存入数据库
             IMessageService.saveMessage(chatMessage);

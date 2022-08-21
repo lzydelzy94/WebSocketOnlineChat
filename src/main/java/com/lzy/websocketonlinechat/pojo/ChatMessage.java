@@ -29,5 +29,12 @@ public class ChatMessage extends Message{
 
     private String toName;
 
+    private String sendTime;
+
+    private Object content;
+
+    private int msgType;
+
+
 
 }

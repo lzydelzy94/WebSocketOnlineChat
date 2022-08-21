@@ -31,4 +31,11 @@ public class FriendServiceImpl implements IFriendService {
     public List<String> getFriendsByUid(int uid){
         return friendDao.getFriendsByUid(uid);
     }
+
+    @Override
+    public int deleteFriend(int uid, int friendId) {
+        int a = friendDao.deleteFriend(uid, friendId);
+        int b = friendDao.deleteFriend(friendId, uid);
+        return a & b;
+    }
 }

@@ -9,5 +9,8 @@ spring:
     prefix: classpath:/templates/
     suffix: .html
 
+mybatis:
+  mapper-locations: classpath:/mapper/*.xml
+
 #todo 增加前台页面校验，增删好友后台结构，controller返回结果封装为resultMessage，启用loginerror页面
 #todo 增加群发消息功能

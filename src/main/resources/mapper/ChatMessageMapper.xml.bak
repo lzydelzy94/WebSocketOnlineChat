@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace = "com.lzy.websocketonlinechat.dao.ChatMessageDao">
+
+    <resultMap id="MsgMap" type="com.lzy.websocketonlinechat.pojo.Message">
+        <result column="sendTime" property="sendTime"/>
+        <result column="content" property="content"/>
+        <result column="msgType" property="msgType"/>
+    </resultMap>
+
+
+    <resultMap id="chatMsgMap" type="com.lzy.websocketonlinechat.pojo.ChatMessage"
+               extends="MsgMap">
+        <result column="fromId" property="fromId"/>
+        <result column="toId" property="toId"/>
+    </resultMap>
+
+    <select id="getMessages" resultMap="chatMsgMap">
+        select sendTime,fromId,toId,content,msgType from chat_message where fromId = #{fromId} and toId = #{toId} and msgType = #{msgType}
+    </select>
+</mapper>

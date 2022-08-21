@@ -84,14 +84,33 @@
     <div id="username"><h3 style="text-align: center;">用户：张三<span>-在线</span></h3></div>
     <div id="Inchat"></div>
     <div id="left">
-        <div id="privateMsgContent">
+<!--        在线聊天窗口-->
+        <div id="onLinePrivateMsgContent"  style="visibility: hidden">
+        </div>
+        <div id="onLinePirvateChatInput" style="visibility: hidden">
+            <textarea type="text" id="onlinePrivateChatInput_text" style="width: 695px;height: 200px;"></textarea>
+            <button id="onlinePrivateChatSubmit" style="float: right;">发送</button>
+        </div>
+
+        <!--    离线聊天窗口-->
+        <div id="offlinePrivateLeavingMsgContent" style="visibility: hidden">
 
         </div>
-        <div id="input">
-            <textarea type="text" id="input_text" style="width: 695px;height: 200px;"></textarea>
-            <button id="privateChatSubmit" style="float: right;">发送</button>
+        <div id="offlinePrivateChatInput" style="visibility: hidden">
+            <textarea type="text" id="offlinePrivateChatInput_text" style="width: 695px;height: 200px;"></textarea>
+            <button id="offlinePrivateChatSubmit" style="float: right;">发送留言</button>
         </div>
+
+<!--        显示留言-->
+<!--        <div id="leavingMsgs" style="visibility: hidden">-->
+
+<!--        </div>-->
+        <dialog id="leavingMsgs" style="visibility: hidden">
+
+        </dialog>
+
     </div>
+
     <div id="right">
         <p id="hy" style="text-align: center;">好友列表</p>
         <div id="hyList">
@@ -100,8 +119,19 @@
         <div id="xtList">
 
         </div>
+
+        <div id="publicChatContent">
+        </div>
+
+        <div id="publicChatInput">
+            <textarea type="text" id="publicChatInputText" style="width: 695px;height: 200px;"></textarea>
+            <button id="publicChatSubmit" style="float: right;">发送</button>
+        </div>
     </div>
+
 </div>
+
+
 </body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script>
@@ -123,23 +153,43 @@
     var userid;
     var onLineNames="";
     var res;
+    var leavingmsgs = "";
     //点击好友名称展示相关消息
     function showChat(name){  //todo 添加用户功能弹窗，从弹窗选择私聊以后再弹出私聊框
         //只能与当前在线好友发起私聊
         if(onLineNames.includes(name)){
-        // if(true){
             toName = name;
             //情况聊天框
-            $("#privateMsgContent").html("");
-            $("#privateMsgContent").css("visibility","visible");
+            $("#onLinePrivateMsgContent").html("");
+            $("#onLinePrivateMsgContent").css("visibility","visible");
+            $("#onLinePirvateChatInput").css("visibility","visible");
+
+            $("#offlinePrivateLeavingMsgContent").css("visibility","hidden");
+            $("#offlinePrivateChatInput").css("visibility","hidden");
+
+
             $("#Inchat").html("当前正与"+toName+"聊天");
             //从sessionStorage中获取历史信息
             let chatData = sessionStorage.getItem(toName);
             if (chatData != null){
-                $("#privateMsgContent").html(chatData);
+                $("#onLinePrivateMsgContent").html(chatData);
             }
-        }else {
-            alert(name+"当前不在线")
+        }else {         //离线时为离线聊天窗口
+            toName = name;
+            //情况聊天框
+            $("#offinePrivateMsgContent").html("");
+            $("#offlinePrivateLeavingMsgContent").css("visibility","visible");
+            $("#offlinePrivateChatInput").css("visibility","visible");
+
+            $("#onLinePrivateMsgContent").css("visibility","hidden");
+            $("#onLinePirvateChatInput").css("visibility","hidden");
+
+            $("#Inchat").html("当前给"+toName+"发送留言");
+            //从sessionStorage中获取历史信息
+            let chatData = sessionStorage.getItem(toName);
+            if (chatData != null){
+                $("#offlinePrivateLeavingMsgContent").html(chatData);
+            }
         }
 
     }
@@ -154,6 +204,24 @@
             },
             async:false //同步请求，只有上面好了才会接着下面
         });
+        $.ajax({   //获取留言
+            url:"/msg/"+userid,
+            method:"get",
+            success:function (resp) {
+                leavingmsgs = resp
+                console.log(leavingmsgs)
+                console.log(leavingmsgs[0].content)
+            },
+            async:false //同步请求，只有上面好了才会接着下面
+        });
+
+        //显示留言
+        // if(0 != leavingmsgs.length){
+        //     alert("你有留言，是否查看")
+        //     console.log(leavingmsgs.length)
+        //     $("#leavingMsgs").css("visibility", "visible");
+        //     $("#leavingMsgs").html("<h1>asdfasdf<h1/>")
+        // }
         //建立websocket连接
         //获取host解决后端获取httpsession的空指针异常
         var host = window.location.host;
@@ -205,7 +273,7 @@
                 console.log(res.fromName)
                 console.log(toName)
                 if (toName == res.fromName) {
-                    $("#privateMsgContent").append(str);
+                    $("#onLinePrivateMsgContent").append(str);
                 }
                 let chatData = sessionStorage.getItem(res.fromName);
                 if (chatData != null){
@@ -213,19 +281,23 @@
                 }
                 //保存聊天消息
                 sessionStorage.setItem(res.fromName,str);
+            }else if (30 == res.msgType) {
+                let str = "<span id='mes_right' float:'left'>"+ res.fromName+" to所有人:"+res.content +"</span></br>";
+                $("#publicChatContent").append(str)
+                console.log("dsfsdfsdf")
             };
         }
         ws.onclose = function () {
             $("#username").html("<h3 style=\"text-align: center;\">用户："+ username +"<span>-离线</span></h3>");
         }
 
-        //发送消息
-        $("#privateChatSubmit").click(function () {  //todo加入uid
+        //发送在线消息
+        $("#onlinePrivateChatSubmit").click(function () {  //todo加入uid
             //1.获取输入的内容
-            let data = $("#input_text").val();
+            let data = $("#onlinePrivateChatInput_text").val();
             let date = getDate();
             //2.清空发送框
-            $("#input_text").val("");
+            $("#onlinePrivateChatInput_text").val("");
             let json = {
                 "fromName": username,
                 "toName": toName ,
@@ -237,12 +309,67 @@
             //将数据展示在聊天区
             let str = "<span id='mes_right'>"+ data +"</span></br>";
 
-            $("#privateMsgContent").append(str);
+            $("#onLinePrivateMsgContent").append(str);
             let chatData = sessionStorage.getItem(toName);
             if (chatData != null){
                 str = chatData + str;
             }
             sessionStorage.setItem(toName,str);
+            //3.发送数据
+            ws.send(JSON.stringify(json));
+        })
+
+        //发送留言
+        $("#offlinePrivateChatSubmit").click(function () {  //todo加入uid
+            //1.获取输入的内容
+            let data = $("#offlinePrivateChatInput_text").val();
+            let date = getDate();
+            //2.清空发送框
+            $("#offlinePrivateChatInput_text").val("");
+            let json = {
+                "fromName": username,
+                "toName": toName ,
+                "content": data,
+                "msgType": 40,
+                "sendTime": date,
+                "fromId": userid
+            };
+            //将数据展示在聊天区
+            let str = "<span id='mes_right'>"+ data +"</span></br>";
+
+            $("#offlinePrivateLeavingMsgContent").append(str);
+            let chatData = sessionStorage.getItem(toName);
+            if (chatData != null){
+                str = chatData + str;
+            }
+            sessionStorage.setItem(toName,str);
+            //3.发送数据
+            ws.send(JSON.stringify(json));
+        })
+
+        //发送公共消息
+        $("#publicChatSubmit").click(function () {  //todo加入uid
+            //1.获取输入的内容
+            let data = $("#publicChatInputText").val();
+            let date = getDate();
+            //2.清空发送框
+            $("#publicChatInputText").val("");
+            let json = {
+                "fromName": username,
+                "toName": "",
+                "content": data,
+                "msgType": 30,
+                "sendTime": date,
+                "fromId": userid
+            };
+            //将数据展示在聊天区
+            let str = "<span id='mes_right'>"+ data +"</span></br>";
+
+            // let chatData = sessionStorage.getItem(toName);
+            // if (chatData != null){
+            //     str = chatData + str;
+            // }
+            // sessionStorage.setItem(toName,str);
             //3.发送数据
             ws.send(JSON.stringify(json));
         })

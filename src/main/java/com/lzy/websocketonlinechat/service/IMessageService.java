@@ -9,4 +9,9 @@ public interface IMessageService {
     public int saveMessage(ChatMessage message);
 
     public List<ChatMessage> getMessages(int fromId, int toId, int msgType);
+
+    public List<ChatMessage> getLeavingMsgs(int toId, int msgType);
+
+    public void UpdateMsgToReaded(List<ChatMessage> list);
+
 }
